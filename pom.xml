@@ -7,10 +7,10 @@
 
         
 	<groupId>cirb</groupId>
-	<artifactId>Emma_Bacteria</artifactId>
+	<artifactId>FluoBackgroundBacteria</artifactId>
 	<version>1.0.0</version>
         <packaging>jar</packaging>
-	<name>Emma_Bacteria</name>
+	<name>FluoBackgroundBacteria</name>
 	<description>
             Find DNA in bacteria
         </description>

@@ -35,6 +35,7 @@ public class Emma_Bacteria implements PlugIn {
     private String imageDir = "";
     public String outDirResults = "";
     public BufferedWriter results;
+        public BufferedWriter meanResults;
    
     
     public void run(String arg) {
@@ -69,6 +70,18 @@ public class Emma_Bacteria implements PlugIn {
             results = new BufferedWriter(fwResults);
             results.write(header);
             results.flush();
+                    
+            // Write header for agglomerated results
+            header = "Image name\tFrame number\tMean bacterium area\tBacterium area std\t"
+                    + "Mean bacterium feret\tBacterium feret std\t"
+                    + "Mean bacterium feretMin\tBacterium feretMin std\t"
+                    + "Mean bacterium circularity\tBacterium circularity std\t"
+                    + "Mean bacterium aspect ratio\tBacterium aspect ratio std\t"
+                    + "Mean bacterium roundness\tBacterium roundness std\n";
+            FileWriter fwMeanResults = new FileWriter(outDirResults + "mean_results.xls", false);
+            meanResults = new BufferedWriter(fwMeanResults);
+            meanResults.write(header);
+            meanResults.flush();
             
             // Create OME-XML metadata store of the latest schema version
             ServiceFactory factory;
@@ -106,7 +119,6 @@ public class Emma_Bacteria implements PlugIn {
                 
                 // Open bacteria channel
                 int indexCh = ArrayUtils.indexOf(channels, chs[0]);
-                System.out.print(indexCh);
                 System.out.println("- Opening bacteria channel " + chs[0] + " -");
                 ImagePlus imgPhase = BF.openImagePlus(options)[indexCh];
                 
@@ -132,7 +144,7 @@ public class Emma_Bacteria implements PlugIn {
                         
                     // Do measurements and save results
                     tools.print("- Saving results -");
-                    tools.saveResults(tbactPop, tFluo, tBackground, rootName, results, t);
+                    tools.saveResults(tbactPop, tPhase, tFluo, tBackground, rootName, results, meanResults, t);
                 
                     // Save images
                     tools.drawResults(tPhase, tFluo, tbactPop, outDirResults+rootName, outDirResults);

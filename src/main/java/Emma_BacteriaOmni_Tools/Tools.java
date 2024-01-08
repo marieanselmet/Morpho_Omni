@@ -9,8 +9,10 @@ import ij.measure.Calibration;
 import ij.plugin.Duplicator;
 import ij.gui.Roi;
 import fiji.util.gui.GenericDialogPlus;
+import ij.measure.ResultsTable;
 import ij.plugin.RGBStackMerge;
 import ij.plugin.ZProjector;
+import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Font;
@@ -37,6 +39,7 @@ import mcib3d.geom2.measurements.MeasureVolume;
 import mcib3d.image3d.ImageHandler;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.output.NullPrintStream;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 
 /**
@@ -415,7 +418,8 @@ public class Tools {
      * Compute bacteria parameters and save them in file
      * @throws java.io.IOException
      */
-    public void saveResults(Objects3DIntPopulation bactPop, ImagePlus fluoImg, double background, String imgName, BufferedWriter file, int frameNumber) throws IOException {
+    public void saveResults(Objects3DIntPopulation bactPop, ImagePlus phaseImg, ImagePlus fluoImg, double background, String imgName, BufferedWriter file, BufferedWriter meanFile, int frameNumber) throws IOException {
+        
         for (Object3DInt bact : bactPop.getObjects3DInt()) {
             float bactLabel = bact.getLabel();
             double bactSurf = new MeasureVolume(bact).getValueMeasurement(MeasureVolume.VOLUME_UNIT);
@@ -424,8 +428,55 @@ public class Tools {
             double bactLength = feret1Unit.distance(feret2Unit)*cal.pixelWidth;
             double fluoIntensity = new MeasureIntensity(bact, ImageHandler.wrap(fluoImg)).getValueMeasurement(MeasureIntensity.INTENSITY_AVG);
             file.write(imgName+"\t"+frameNumber+"\t"+bactLabel+"\t"+bactSurf+"\t"+bactLength+"\t"+fluoIntensity+"\t"+background+"\t"+fluoIntensity/background+"\n");
-            file.flush();
         }
+        
+        DescriptiveStatistics area, feret, feretMin, circularity, aspectRatio, roundness;
+        if (bactPop.getNbObjects() > 0) {
+            ImageHandler imh = ImageHandler.wrap(phaseImg).createSameDimensions();
+            bactPop.drawInImage(imh);
+            ResultsTable resultsTable = new ResultsTable();
+            ParticleAnalyzer particleAnalyzer = new ParticleAnalyzer(ParticleAnalyzer.CLEAR_WORKSHEET, ParticleAnalyzer.SHAPE_DESCRIPTORS+ParticleAnalyzer.LIMIT
+                    +ParticleAnalyzer.AREA+ParticleAnalyzer.FERET, resultsTable, 0, Double.MAX_VALUE);
+            IJ.setThreshold(imh.getImagePlus(), 1, Double.MAX_VALUE);
+            particleAnalyzer.analyze(imh.getImagePlus());
+            area = new DescriptiveStatistics(resultsTable.getColumn("Area"));
+            feret = new DescriptiveStatistics(resultsTable.getColumn("Feret"));
+            feretMin = new DescriptiveStatistics(resultsTable.getColumn("MinFeret"));    
+            circularity = new DescriptiveStatistics(resultsTable.getColumn("Circ."));
+            aspectRatio = new DescriptiveStatistics(resultsTable.getColumn("AR"));
+            roundness = new DescriptiveStatistics(resultsTable.getColumn("Round"));
+
+        } else {
+            area = new DescriptiveStatistics();
+            feret = new DescriptiveStatistics();
+            feretMin = new DescriptiveStatistics();
+            circularity = new DescriptiveStatistics();
+            aspectRatio = new DescriptiveStatistics();
+            roundness = new DescriptiveStatistics();
+        }
+        
+        meanFile.write(imgName+"\t"+frameNumber+"\t"+area.getMean()+"\t"+area.getStandardDeviation()+"\t"+
+                feret.getMean()+"\t"+feret.getStandardDeviation()+"\t"+
+                feretMin.getMean()+"\t"+feretMin.getStandardDeviation()+"\t"+
+                circularity.getMean()+"\t"+circularity.getStandardDeviation()+"\t"+
+                aspectRatio.getMean()+"\t"+aspectRatio.getStandardDeviation()+"\t"+
+                roundness.getMean()+"\t"+roundness.getStandardDeviation()+"\n");
+        
+        file.flush();
+        meanFile.flush();
+        
+        
+        
+//        // Save results in file
+//        for (int i = 0; i < rt.size(); i++) {
+//            double area = rt.getValue("Area", i);
+//            double cir = rt.getValue("Circ.", i);
+//            double ar = rt.getValue("AR", i);
+//            double round = rt.getValue("Round", i);
+//            double sol = rt.getValue("Solidity", i);
+//            results.write(imgName+"\t"+sigma+"\t"+(i+1)+"\t"+area+"\t"+cir+"\t"+ar+"\t"+round+"\t"+sol+"\n");
+//            results.flush();
+//        }
     }
     
    
