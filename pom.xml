@@ -7,21 +7,21 @@
 
         
 	<groupId>cirb</groupId>
-	<artifactId>FluoBackgroundBacteria</artifactId>
+	<artifactId>Omni_morpho</artifactId>
 	<version>1.0.0</version>
         <packaging>jar</packaging>
-	<name>FluoBackgroundBacteria</name>
+	<name>Omni_morpho</name>
 	<description>
-            Find DNA in bacteria
+            Detect bacteria with Omnipose and compute some morphological descriptors
         </description>
 
 	<developers>
 		<developer>
-                    <id>phm</id>
-                    <name>Philippe Mailly</name>
-                    <email>philippe.mailly@college-de-france.fr</email>
+                    <id></id>
+                    <name></name>
+                    <email></email>
                     <url></url>
-                    <organization>CIRB, Collège de France</organization>
+                    <organization></organization>
                     <roles>
                             <role>developer</role>
                     </roles>
@@ -33,7 +33,7 @@
 	<properties>
                 <imagej.app.directory>C:\Users\manselme\Desktop\Fiji.app\</imagej.app.directory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<main-class>Dna_Bacteria_Omni.jar</main-class>
+		<main-class>BacteriaOmniposeMorpho.jar</main-class>
 	</properties>
 
 	<dependencies>

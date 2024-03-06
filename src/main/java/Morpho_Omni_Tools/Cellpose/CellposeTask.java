@@ -1,6 +1,6 @@
-package Emma_BacteriaOmni_Tools.Cellpose;
+package Morpho_Omni_Tools.Cellpose;
 
-import Emma_BacteriaOmni_Tools.Cellpose.CellposeTaskSettings;
+import Morpho_Omni_Tools.Cellpose.CellposeTaskSettings;
 import java.util.ArrayList;
 
 public class CellposeTask {

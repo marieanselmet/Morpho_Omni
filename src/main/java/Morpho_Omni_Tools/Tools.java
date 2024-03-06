@@ -1,7 +1,7 @@
-package Emma_BacteriaOmni_Tools;
+package Morpho_Omni_Tools;
 
-import Emma_BacteriaOmni_Tools.Cellpose.CellposeTaskSettings;
-import Emma_BacteriaOmni_Tools.Cellpose.CellposeSegmentImgPlusAdvanced;
+import Morpho_Omni_Tools.Cellpose.CellposeTaskSettings;
+import Morpho_Omni_Tools.Cellpose.CellposeSegmentImgPlusAdvanced;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.FileSaver;
@@ -46,25 +46,24 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
  * @author Orion-CIRB
  */
 public class Tools {
-//    private final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
 
     public Calibration cal = new Calibration();
     private double pixelSurf = 0;
-    String[] channelsName = {"Phase: ", "Fluo: "};
+    String[] channelsName = {"Phase: "};
     
      // Omnipose
     private String omniposeEnvDirPath = "/opt/AppData/Local/miniconda3/envs/omnipose";
     private String omniposeModelsPath = System.getProperty("user.home")+"/.cellpose/models/";
     private String omniposeModel = "bact_phase_omnitorch_0";
      
-    private int omniposeDiameter = 30; //50
+    private int omniposeDiameter = 30;
     private int omniposeMaskThreshold = 0;
     private double omniposeFlowThreshold = 0.4;
     private boolean useGpu = true;
     
     // Bacteria
     private double minBactSurface = 1;
-    private double maxBactSurface = 10;
+    private double maxBactSurface = 50;
    
     /**
      * Display a message in the ImageJ console and status bar
@@ -289,28 +288,11 @@ public class Tools {
         return(ch);
     }
     
-    
-    /**
-     * Do Z projection
-     */
-    public ImagePlus doZProjection(ImagePlus img, int param) {
-        ZProjector zproject = new ZProjector();
-        zproject.setMethod(param);
-        zproject.setStartSlice(1);
-        zproject.setStopSlice(img.getNSlices());
-        zproject.setImage(img);
-        zproject.doProjection();
-       return(zproject.getProjection());
-    }
-    
    
     /**
     * Detect bacteria with Omnipose
     */
     public Objects3DIntPopulation omniposeDetection(ImagePlus imgBact){
-//        ImagePlus imgIn = new Duplicator().run(imgBact);
-//        imgIn.setCalibration(cal);
-
         // Resize to be in a Omnipose-friendly scale
         ImagePlus imgIn = null;
         boolean resize = false;
@@ -346,79 +328,17 @@ public class Tools {
         pop = new Objects3DIntPopulationComputation(pop).getFilterSize(minBactSurface/pixelSurf, maxBactSurface/pixelSurf);
         pop.resetLabels();
         
-        // Close images
         flush_close(imgIn);
         flush_close(imgOut);
-        
         return(pop);
     }
-   
-  
-    
-    /**
-     * Find background image intensity
-     * with/without roi
-     * Z projection over min intensity + read stats (median/mean) intensity
-     * @param img
-     * @param roi
-     * @param method
-     * @return 
-     */
-    public double findBackground(ImagePlus img, Roi roi, String method) {
-      ImagePlus imgProj =  new Duplicator().run(img);
-      ImageProcessor imp = img.getProcessor();
-      if (roi != null) {
-          roi.setLocation(0, 0);
-          imp.setRoi(roi);
-      }
-      double bg = (method.equals("median")) ? imp.getStatistics().median : imp.getStatistics().mean;
-//      System.out.println("Background = " + bg);
-      flush_close(imgProj);
-      return(bg);
-    }
-    
-    /**
-     * Auto find background from scroolling roi
-     * @param img
-     * @param roiBgSize
-     * @param method
-     * @return 
-     */
-//    public RoiBg findRoiBackgroundAuto(ImagePlus img, int roiBgSize, String method) {
-    public double findRoiBackgroundAuto(ImagePlus img, int roiBgSize, String method) {
-        // scroll image and measure bg intensity in roi 
-        // take roi lower intensity
-        
-        ArrayList<RoiBg> intBgFound = new ArrayList<>();
-        for (int x = 0; x < img.getWidth() - roiBgSize; x += roiBgSize) {
-            for (int y = 0; y < img.getHeight() - roiBgSize; y += roiBgSize) {
-                Roi roi = new Roi(x, y, roiBgSize, roiBgSize);
-//                System.out.println("x" + x);
-//                System.out.println("y" + y);
-                double bg = findBackground(img, roi, method);
-                intBgFound.add(new RoiBg(roi, bg));
-            }
-        }
-        img.deleteRoi();
-        // sort RoiBg on bg value
-        intBgFound.sort(Comparator.comparing(RoiBg::getBgInt));
-        // Find lower value
-        RoiBg roiBg = intBgFound.get(0);
-        
-        int roiCenterX = (int)(roiBg.getRoi().getBounds().x+(roiBgSize/2));
-        int roiCenterY = (int)(roiBg.getRoi().getBounds().y+(roiBgSize/2));
-        System.out.println("Roi auto background("+method+") found = "+roiBg.getBgInt()+" center x = "+roiCenterX+", y = "+roiCenterY);
-        //return(roiBg);
-        return roiBg.getBgInt();
-    }
-    
-    
+     
    
     /**
      * Compute bacteria parameters and save them in file
      * @throws java.io.IOException
      */
-    public void saveResults(Objects3DIntPopulation bactPop, ImagePlus phaseImg, ImagePlus fluoImg, double background, String imgName, BufferedWriter file, BufferedWriter meanFile, int frameNumber) throws IOException {
+    public void saveResults(Objects3DIntPopulation bactPop, ImagePlus phaseImg, String imgName, BufferedWriter file, int frameNumber) throws IOException {
         
         for (Object3DInt bact : bactPop.getObjects3DInt()) {
             float bactLabel = bact.getLabel();
@@ -426,68 +346,35 @@ public class Tools {
             VoxelInt feret1Unit = new MeasureFeret(bact).getFeret1Unit();
             VoxelInt feret2Unit = new MeasureFeret(bact).getFeret2Unit();
             double bactLength = feret1Unit.distance(feret2Unit)*cal.pixelWidth;
-            double fluoIntensity = new MeasureIntensity(bact, ImageHandler.wrap(fluoImg)).getValueMeasurement(MeasureIntensity.INTENSITY_AVG);
-            file.write(imgName+"\t"+frameNumber+"\t"+bactLabel+"\t"+bactSurf+"\t"+bactLength+"\t"+fluoIntensity+"\t"+background+"\t"+fluoIntensity/background+"\n");
-        }
-        
-        DescriptiveStatistics area, feret, feretMin, circularity, aspectRatio, roundness;
-        if (bactPop.getNbObjects() > 0) {
+            
             ImageHandler imh = ImageHandler.wrap(phaseImg).createSameDimensions();
-            bactPop.drawInImage(imh);
+            bact.drawObject(imh);
             ResultsTable resultsTable = new ResultsTable();
             ParticleAnalyzer particleAnalyzer = new ParticleAnalyzer(ParticleAnalyzer.CLEAR_WORKSHEET, ParticleAnalyzer.SHAPE_DESCRIPTORS+ParticleAnalyzer.LIMIT
                     +ParticleAnalyzer.AREA+ParticleAnalyzer.FERET, resultsTable, 0, Double.MAX_VALUE);
             IJ.setThreshold(imh.getImagePlus(), 1, Double.MAX_VALUE);
             particleAnalyzer.analyze(imh.getImagePlus());
-            area = new DescriptiveStatistics(resultsTable.getColumn("Area"));
-            feret = new DescriptiveStatistics(resultsTable.getColumn("Feret"));
-            feretMin = new DescriptiveStatistics(resultsTable.getColumn("MinFeret"));    
-            circularity = new DescriptiveStatistics(resultsTable.getColumn("Circ."));
-            aspectRatio = new DescriptiveStatistics(resultsTable.getColumn("AR"));
-            roundness = new DescriptiveStatistics(resultsTable.getColumn("Round"));
 
-        } else {
-            area = new DescriptiveStatistics();
-            feret = new DescriptiveStatistics();
-            feretMin = new DescriptiveStatistics();
-            circularity = new DescriptiveStatistics();
-            aspectRatio = new DescriptiveStatistics();
-            roundness = new DescriptiveStatistics();
+            double area = resultsTable.getValue("Area", 0);
+            double feret = resultsTable.getValue("Feret", 0);
+            double minFeret = resultsTable.getValue("MinFeret", 0);
+            double cir = resultsTable.getValue("Circ.", 0);
+            double ar = resultsTable.getValue("AR", 0);
+            double round = resultsTable.getValue("Round", 0);
+            file.write(imgName+"\t"+frameNumber+"\t"+bactLabel+"\t"+area+"\t"+feret+"\t"+minFeret+
+                     "\t"+cir+"\t"+ar+"\t"+round+"\n");
         }
         
-        meanFile.write(imgName+"\t"+frameNumber+"\t"+area.getMean()+"\t"+area.getStandardDeviation()+"\t"+
-                feret.getMean()+"\t"+feret.getStandardDeviation()+"\t"+
-                feretMin.getMean()+"\t"+feretMin.getStandardDeviation()+"\t"+
-                circularity.getMean()+"\t"+circularity.getStandardDeviation()+"\t"+
-                aspectRatio.getMean()+"\t"+aspectRatio.getStandardDeviation()+"\t"+
-                roundness.getMean()+"\t"+roundness.getStandardDeviation()+"\n");
-        
         file.flush();
-        meanFile.flush();
-        
-        
-        
-//        // Save results in file
-//        for (int i = 0; i < rt.size(); i++) {
-//            double area = rt.getValue("Area", i);
-//            double cir = rt.getValue("Circ.", i);
-//            double ar = rt.getValue("AR", i);
-//            double round = rt.getValue("Round", i);
-//            double sol = rt.getValue("Solidity", i);
-//            results.write(imgName+"\t"+sigma+"\t"+(i+1)+"\t"+area+"\t"+cir+"\t"+ar+"\t"+round+"\t"+sol+"\n");
-//            results.flush();
-//        }
     }
     
-   
     /**
      * Save results in images
      */
-    public void drawResults(ImagePlus imgBact, ImagePlus imgGene, Objects3DIntPopulation bactPop, String imgName, String outDir) {
+    public void drawResults(ImagePlus imgBact, Objects3DIntPopulation bactPop, String imgName, String outDir) {
         ImageHandler imhBact = ImageHandler.wrap(imgBact).createSameDimensions();
         bactPop.drawInImage(imhBact);
         IJ.run(imhBact.getImagePlus(), "glasbey on dark", "");
-//        ImagePlus[] imgColors1 = {imhBact.getImagePlus(), null, null, imgBact, imgGene};
         ImagePlus[] imgColors1 = {imhBact.getImagePlus(), imgBact};
         ImagePlus imgOut1 = new RGBStackMerge().mergeHyperstacks(imgColors1, false);
         imgOut1.setCalibration(cal);
@@ -496,4 +383,6 @@ public class Tools {
         flush_close(imgOut1);
     }
     
+    
 }
+    

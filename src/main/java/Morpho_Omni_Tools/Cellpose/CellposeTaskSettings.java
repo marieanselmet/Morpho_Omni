@@ -1,4 +1,4 @@
-package Emma_BacteriaOmni_Tools.Cellpose;
+package Morpho_Omni_Tools.Cellpose;
 
 
 public class CellposeTaskSettings {

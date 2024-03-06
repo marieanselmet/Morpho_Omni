@@ -1,6 +1,6 @@
-package Emma_BacteriaOmni_Tools.Cellpose;
+package Morpho_Omni_Tools.Cellpose;
 
-import Emma_BacteriaOmni_Tools.Cellpose.CellposeTask;
+import Morpho_Omni_Tools.Cellpose.CellposeTask;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.FileSaver;
