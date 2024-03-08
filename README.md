@@ -1,4 +1,4 @@
-# MorphoOmnipose
+# Morpho_Omni
 
 ### Plugin description
 
