@@ -1,31 +1,14 @@
-# Emma_Bacteria
-
-* **Developed for:** Emma
-* **Team:** Espeli
-* **Date:** August 2023
-* **Software:** Fiji
-
-
-### Images description
-
-3D images taken with a x60 objective
-
-2 channels:
-  1. *488:* Gene of interest
-  2. *561:* mCherry-marked bacteria
+# MorphoOmnipose
 
 ### Plugin description
 
-* Perform average intensity Z-projection of both channels
-* Detect bacteria on channel 2 with Omnipose
-* Measure integrated intensity of each bacterium in channels 2 and 3, and give their ratio
+* Detect bacteria on phase contrast channel with Omnipose
+* Measure bacterium area, length (as Feret diameter), width (as min Feret diameter), circularity, roundness and aspect ratio in calibrated units and save them in an excel file
+* Save image with segmentation masks overlayed for each frame
 
 ### Dependencies
 
 * **3DImageSuite** Fiji plugin
-* **Omnipose** conda environment + *bact_fluor_omnitorch_0* model
+* **Omnipose** conda environment + *bact_phase_omnitorch_0* model
 
-### Version history
-
-Version 1 released on August 4, 2023.
-
+This plugin structure and code (namely the Cellpose wrapper) were inspired from a plugin of the Orion-Cirb github repository.
