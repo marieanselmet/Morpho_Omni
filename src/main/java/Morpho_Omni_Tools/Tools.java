@@ -42,9 +42,6 @@ import org.apache.commons.io.output.NullPrintStream;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 
-/**
- * @author Orion-CIRB
- */
 public class Tools {
 
     public Calibration cal = new Calibration();
@@ -65,42 +62,30 @@ public class Tools {
     private double minBactSurface = 1;
     private double maxBactSurface = 50;
    
-    /**
-     * Display a message in the ImageJ console and status bar
-     */
     public void print(String log) {
         System.out.println(log);
         IJ.showStatus(log);
     }
     
     
-    /**
-     * Check that needed modules are installed
-     */
     public boolean checkInstalledModules() {
         ClassLoader loader = IJ.getClassLoader();
         try {
             loader.loadClass("mcib3d.geom.Object3D");
         } catch (ClassNotFoundException e) {
-            IJ.showMessage("Error", "3D ImageJ Suite not installed, please install from update site");
+            IJ.showMessage("Error", "3D ImageJ Suite not installed");
             return false;
         }
         return true;
     }
     
-    
-    /**
-     * Flush and close an image
-     */
+
     public void flush_close(ImagePlus img) {
         img.flush();
         img.close();
     }
     
     
-    /**
-     * Find images extension
-     */
     public String findImageType(File imagesFolder) {
         String ext = "";
         String[] files = imagesFolder.list();
@@ -149,7 +134,6 @@ public class Tools {
         }
         ArrayList<String> images = new ArrayList();
         for (String f : files) {
-            // Find images with extension
             String fileExt = FilenameUtils.getExtension(f);
             if (fileExt.equals(imageExt) && !f.startsWith("."))
                 images.add(imagesFolder + File.separator + f);
@@ -159,11 +143,6 @@ public class Tools {
     }
     
     
-    /**
-     * Find image calibration
-     * @param meta
-     * @return 
-     */
     public void findImageCalib(IMetadata meta) {
         cal.pixelWidth = meta.getPixelsPhysicalSizeX(0).value().doubleValue();
         cal.pixelHeight = cal.pixelWidth;
@@ -176,13 +155,6 @@ public class Tools {
     }
     
     
-    /**
-     * Find channels name
-     * @throws loci.common.services.DependencyException
-     * @throws loci.common.services.ServiceException
-     * @throws loci.formats.FormatException
-     * @throws java.io.IOException
-     */
     public String[] findChannels (String imageName, IMetadata meta, ImageProcessorReader reader) throws DependencyException, ServiceException, FormatException, IOException {
         int chs = reader.getSizeC();
         String[] channels = new String[chs];
@@ -242,13 +214,9 @@ public class Tools {
     }
     
     
-    /**
-     * Generate dialog box
-     */
     public String[] dialog(String[] channels) {
         GenericDialogPlus gd = new GenericDialogPlus("Parameters");
         gd.setInsets​(0, 160, 0);
-//        gd.addImage(icon);
         
         gd.addMessage("Channels", Font.getFont("Monospace"), Color.blue);
         int index = 0;
@@ -335,8 +303,7 @@ public class Tools {
      
    
     /**
-     * Compute bacteria parameters and save them in file
-     * @throws java.io.IOException
+     * Compute bacteria morphological descriptors and save them in results file
      */
     public void saveResults(Objects3DIntPopulation bactPop, ImagePlus phaseImg, String imgName, BufferedWriter file, int frameNumber) throws IOException {
         
@@ -368,10 +335,7 @@ public class Tools {
         file.flush();
     }
     
-    /**
-     * Save results in images
-     */
-    public void drawResults(ImagePlus imgBact, Objects3DIntPopulation bactPop, String imgName, String outDir) {
+    public void drawResults(ImagePlus imgBact, Objects3DIntPopulation bactPop, String imgName, String outDir, int frameNumber) {
         ImageHandler imhBact = ImageHandler.wrap(imgBact).createSameDimensions();
         bactPop.drawInImage(imhBact);
         IJ.run(imhBact.getImagePlus(), "glasbey on dark", "");
@@ -379,10 +343,9 @@ public class Tools {
         ImagePlus imgOut1 = new RGBStackMerge().mergeHyperstacks(imgColors1, false);
         imgOut1.setCalibration(cal);
         FileSaver ImgObjectsFile1 = new FileSaver(imgOut1);
-        ImgObjectsFile1.saveAsTiff(imgName+"_bacteria.tif");      
+        ImgObjectsFile1.saveAsTiff(imgName + "_frame" + frameNumber + "_bacteria.tif");      
         flush_close(imgOut1);
     }
-    
     
 }
     

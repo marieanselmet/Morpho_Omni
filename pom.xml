@@ -6,11 +6,11 @@
         <modelVersion>4.0.0</modelVersion>
 
         
-	<groupId>cirb</groupId>
-	<artifactId>Omni_morpho</artifactId>
+	<groupId>SAMe</groupId>
+	<artifactId>Morpho_Omni</artifactId>
 	<version>1.0.0</version>
         <packaging>jar</packaging>
-	<name>Omni_morpho</name>
+	<name>Morpho_Omni</name>
 	<description>
             Detect bacteria with Omnipose and compute some morphological descriptors
         </description>
@@ -33,7 +33,7 @@
 	<properties>
                 <imagej.app.directory>C:\Users\manselme\Desktop\Fiji.app\</imagej.app.directory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<main-class>BacteriaOmniposeMorpho.jar</main-class>
+		<main-class>Morpho_Omni.jar</main-class>
 	</properties>
 
 	<dependencies>

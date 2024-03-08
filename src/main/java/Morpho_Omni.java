@@ -42,7 +42,7 @@ public class Morpho_Omni implements PlugIn {
                 return;
             } 
             
-            imageDir = IJ.getDirectory("Choose directory containing image files...");
+            imageDir = IJ.getDirectory("Choose directory containing image files");
             if (imageDir == null) {
                 return;
             }  
@@ -51,7 +51,7 @@ public class Morpho_Omni implements PlugIn {
             String file_ext = tools.findImageType(new File(imageDir));
             ArrayList<String> imageFiles = tools.findImages(imageDir, file_ext);
             if (imageFiles.isEmpty()) {
-                IJ.showMessage("Error", "No images found with " + file_ext + " extension");
+                IJ.showMessage("Error", "No images found");
                 return;
             }
             
@@ -95,7 +95,7 @@ public class Morpho_Omni implements PlugIn {
             for (String f : imageFiles) {
                 reader.setId(f);
                 String rootName = FilenameUtils.getBaseName(f);
-                tools.print("--- ANALYZING IMAGE " + rootName + " ------");
+                tools.print("-- ANALYZING IMAGE " + rootName + " --");
                 
                 ImporterOptions options = new ImporterOptions();
                 options.setId(f);
@@ -114,20 +114,20 @@ public class Morpho_Omni implements PlugIn {
                     
                     // Detect bacteria with Omnipose
                     Objects3DIntPopulation tbactPop = tools.omniposeDetection(tPhase);
-                    System.out.println(tbactPop.getNbObjects() + " bacteria found");
+                    System.out.println(tbactPop.getNbObjects() + " bacteria found in frame " + t);
                     
                     // Do measurements and save results
                     tools.saveResults(tbactPop, tPhase, rootName, results, t);
                     
                     // Draw results
-                    tools.drawResults(tPhase, tbactPop, outDirResults+rootName, outDirResults);
+                    tools.drawResults(tPhase, tbactPop, outDirResults+rootName, outDirResults, t);
                 
                 }
  
                 tools.flush_close(imgPhase);
             }
 
-            tools.print("--- Done! ---");
+            tools.print("-- Done! --");
             
         }   catch (IOException | FormatException | DependencyException | ServiceException ex) {
             Logger.getLogger(Morpho_Omni.class.getName()).log(Level.SEVERE, null, ex);
